@@ -15,15 +15,37 @@ CDirWalk::
 {
 }
 
+void
+CDirWalk::
+setDirName(const std::string &dirname)
+{
+  dirname_ = dirname;
+}
+
 std::string
 CDirWalk::
-getPath() const
+getFilePath() const
 {
-  std::string path = filename_;
-
   uint num_dirs = dirs_.size();
 
-  for (int i = num_dirs - 1; i >= 0; --i)
+  if (num_dirs == 0)
+    return filename_;
+
+  return getDirPath() + "/" + filename_;
+}
+
+std::string
+CDirWalk::
+getDirPath() const
+{
+  uint num_dirs = dirs_.size();
+
+  if (num_dirs == 0)
+    return "";
+
+  std::string path = dirs_[num_dirs - 1];
+
+  for (int i = num_dirs - 2; i >= 0; --i)
     path = dirs_[i] + "/" + path;
 
   return path;
@@ -33,6 +55,8 @@ bool
 CDirWalk::
 walk()
 {
+  dirs_.clear();
+
   bool entered = false;
 
   if (dirname_ != ".") {

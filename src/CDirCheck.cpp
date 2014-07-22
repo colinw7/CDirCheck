@@ -13,17 +13,22 @@ class CDirTreeWalk : public CDirWalk {
  private:
   bool checkDir(const std::string &dirname);
 
+  void enter();
+  void leave();
+
   void process();
 
  private:
-  CDirCheck *check_;
+  CDirCheck*        check_;
+  std::string       dirName_;
+  std::vector<uint> dirCount_;
 };
 
 //----------
 
 CDirCheck::
 CDirCheck(const std::string &dirName) :
- dirName_(dirName), matchDir_(0), matchFile_(0), ignoreDir_(0), ignoreFile_(0)
+ dirName_(dirName), matchDir_(0), matchFile_(0), ignoreDir_(0), ignoreFile_(0), remove_(false)
 {
   CFile dir(dirName_);
 
@@ -34,13 +39,14 @@ void
 CDirCheck::
 addTest(TestType type)
 {
-  if      (type == ZERO_LENGTH)  tests.zero_length = true;
-  else if (type == DUPLICATE  )  tests.duplicate   = true;
-  else if (type == DUP_NAME   )  tests.dup_name    = true;
-  else if (type == BAD_NAME   )  tests.bad_name    = true;
-  else if (type == BAD_LINK   )  tests.bad_link    = true;
-  else if (type == BIGGER     )  tests.bigger      = true;
-  else if (type == SMALLER    )  tests.smaller     = true;
+  if      (type == ZERO_LENGTH) tests.zero_length = true;
+  else if (type == DUPLICATE  ) tests.duplicate   = true;
+  else if (type == DUP_NAME   ) tests.dup_name    = true;
+  else if (type == BAD_NAME   ) tests.bad_name    = true;
+  else if (type == BAD_LINK   ) tests.bad_link    = true;
+  else if (type == BIGGER     ) tests.bigger      = true;
+  else if (type == SMALLER    ) tests.smaller     = true;
+  else if (type == EMPTY      ) tests.empty       = true;
 }
 
 void
@@ -111,6 +117,13 @@ setIgnoreFile(const std::string &pattern)
 
 void
 CDirCheck::
+setRemove(bool remove)
+{
+  remove_ = remove;
+}
+
+void
+CDirCheck::
 exec()
 {
   CFileBase::setUseLStat(true);
@@ -120,6 +133,13 @@ exec()
   walk.walk();
 
   process();
+}
+
+void
+CDirCheck::
+addEmptyDir(const std::string &path)
+{
+  emptyDirList_.push_back(path);
 }
 
 void
@@ -206,6 +226,15 @@ process()
     }
   }
 
+  if (tests.empty) {
+    for (DirList::const_iterator pd = emptyDirList_.begin(); pd != emptyDirList_.end(); ++pd) {
+      if (remove_)
+        std::cout << "rmdir " << *pd << std::endl;
+      else
+        std::cerr << *pd << " : EmptyDir " << std::endl;
+    }
+  }
+
   for (p1 = fileList_.begin(), p2 = fileList_.end(); p1 != p2; ++p1) {
     CDirCheckFile *file = *p1;
 
@@ -213,56 +242,53 @@ process()
 
     if (! fail) continue;
 
-    std::cerr << simplifyPath(file->getFile().getPath()) << ":";
+    std::string filename = simplifyPath(file->getFile().getPath());
 
-    if (fail & ZERO_LENGTH)
-      std::cerr << " ZeroLength";
+    if (remove_)
+      std::cout << "rm " << filename << std::endl;
+    else {
+      std::cerr << filename << " :";
 
-    if (fail & BIGGER)
-      std::cerr << " Bigger";
+      if (fail & ZERO_LENGTH) std::cerr << " ZeroLength";
+      if (fail & BIGGER     ) std::cerr << " Bigger";
+      if (fail & SMALLER    ) std::cerr << " Smaller";
+      if (fail & BAD_LINK   ) std::cerr << " BadLink";
+      if (fail & BAD_NAME   ) std::cerr << " BadName";
 
-    if (fail & SMALLER)
-      std::cerr << " Smaller";
+      if (fail & DUPLICATE) {
+        std::cerr << " Duplicate (";
 
-    if (fail & BAD_LINK)
-      std::cerr << " BadLink";
+        const CDirCheckFile::FileList &files = file->getDuplicateFiles();
 
-    if (fail & BAD_NAME)
-      std::cerr << " BadName";
+        CDirCheckFile::FileList::const_iterator pd1, pd2;
 
-    if (fail & DUPLICATE) {
-      std::cerr << " Duplicate (";
+        for (pd1 = files.begin(), pd2 = files.end(); pd1 != pd2; ++pd1) {
+          if (pd1 != files.begin()) std::cerr << " ";
 
-      const CDirCheckFile::FileList &files = file->getDuplicateFiles();
+          std::cerr << simplifyPath((*pd1)->getFile().getPath());
+        }
 
-      CDirCheckFile::FileList::const_iterator pd1, pd2;
-
-      for (pd1 = files.begin(), pd2 = files.end(); pd1 != pd2; ++pd1) {
-        if (pd1 != files.begin()) std::cerr << " ";
-
-        std::cerr << simplifyPath((*pd1)->getFile().getPath());
+        std::cerr << ")";
       }
 
-      std::cerr << ")";
-    }
+      if (fail & DUP_NAME) {
+        std::cerr << " Dup Name (";
 
-    if (fail & DUP_NAME) {
-      std::cerr << " Dup Name (";
+        const CDirCheckFile::FileList &files = CDirDupNameMapInst->getDupNames(file);
 
-      const CDirCheckFile::FileList &files = CDirDupNameMapInst->getDupNames(file);
+        CDirCheckFile::FileList::const_iterator pd1, pd2;
 
-      CDirCheckFile::FileList::const_iterator pd1, pd2;
+        for (pd1 = files.begin(), pd2 = files.end(); pd1 != pd2; ++pd1) {
+          if (pd1 != files.begin()) std::cerr << " ";
 
-      for (pd1 = files.begin(), pd2 = files.end(); pd1 != pd2; ++pd1) {
-        if (pd1 != files.begin()) std::cerr << " ";
+          std::cerr << simplifyPath((*pd1)->getFile().getPath());
+        }
 
-        std::cerr << simplifyPath((*pd1)->getFile().getPath());
+        std::cerr << ")";
       }
 
-      std::cerr << ")";
+      std::cerr << std::endl;
     }
-
-    std::cerr << std::endl;
   }
 }
 
@@ -299,6 +325,7 @@ CDirTreeWalk::
 CDirTreeWalk(CDirCheck *check) :
  CDirWalk(check->getDirName()), check_(check)
 {
+  dirCount_.push_back(0);
 }
 
 bool
@@ -310,8 +337,31 @@ checkDir(const std::string &dirname)
 
 void
 CDirTreeWalk::
+enter()
+{
+  dirCount_.push_back(0);
+
+  dirName_ = getDirPath();
+}
+
+void
+CDirTreeWalk::
+leave()
+{
+  int dirCount = dirCount_.back();
+
+  dirCount_.pop_back();
+
+  if (dirCount == 0)
+    check_->addEmptyDir(dirName_);
+}
+
+void
+CDirTreeWalk::
 process()
 {
+  ++dirCount_.back();
+
   const std::string &fileName = getFileName();
 
   check_->addFile(fileName);

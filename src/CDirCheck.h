@@ -85,6 +85,7 @@ class CDirCheckFile : public CDirFile {
 class CDirCheck {
  public:
   typedef std::list<CDirCheckFile *> FileList;
+  typedef std::vector<std::string>   DirList;
 
   enum TestType {
     BAD_LINK    = (1<<0),
@@ -94,10 +95,12 @@ class CDirCheck {
     DUPLICATE   = (1<<4),
     DUP_NAME    = (1<<5),
     BIGGER      = (1<<6),
-    SMALLER     = (1<<7)
+    SMALLER     = (1<<7),
+    EMPTY       = (1<<8)
   };
 
   struct TestSet {
+    // TODO: add large/small, larger/smaller, old/new, older/newer
     bool bad_link;
     bool bad_name;
     bool no_extension;
@@ -108,8 +111,7 @@ class CDirCheck {
     uint bigger_value;
     bool smaller;
     uint smaller_value;
-    // large/small larger/smaller
-    // old/new older/newer
+    bool empty;
 
     TestSet() {
       bad_link      = false;
@@ -122,6 +124,7 @@ class CDirCheck {
       bigger_value  = 0;
       smaller       = false;
       smaller_value = 0;
+      empty         = false;
     }
   };
 
@@ -141,7 +144,11 @@ class CDirCheck {
   void setIgnoreDir (const std::string &pattern);
   void setIgnoreFile(const std::string &pattern);
 
+  void setRemove(bool remove);
+
   void exec();
+
+  void addEmptyDir(const std::string &dirName);
 
   void addFile(const std::string &fileName);
 
@@ -155,12 +162,14 @@ class CDirCheck {
  private:
   std::string  dirName_;
   std::string  dirPath_;
+  DirList      emptyDirList_;
   FileList     fileList_;
   TestSet      tests;
   CRegExp     *matchDir_;
   CRegExp     *matchFile_;
   CRegExp     *ignoreDir_;
   CRegExp     *ignoreFile_;
+  bool         remove_;
 };
 
 #endif

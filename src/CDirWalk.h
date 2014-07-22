@@ -15,10 +15,14 @@ class CDirWalk {
   virtual ~CDirWalk();
 
   const std::string &getDirName() const { return dirname_; }
+  void setDirName(const std::string &dirname);
 
   const std::string &getFileName() const { return filename_; }
 
-  std::string getPath() const;
+  std::string getFilePath() const;
+  std::string getDirPath() const;
+
+  std::string getPath() const { return getFilePath(); }
 
   const std::vector<std::string> &getDirs() const { return dirs_; }
 
