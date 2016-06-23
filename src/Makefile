@@ -24,10 +24,6 @@ CDirWalk.cpp \
 CDirScan.cpp \
 CDirFile.cpp \
 CFileCheckSum.cpp \
-CFileUtil.cpp \
-CImageFileUtil.cpp \
-CSoundFileUtil.cpp \
-CTextFileUtil.cpp \
 
 C_SRC = \
 md5.c \
@@ -40,6 +36,7 @@ CPPFLAGS = \
 -I$(INC_DIR) \
 -I../../CArgs/include \
 -I../../CFile/include \
+-I../../CFileUtil/include \
 -I../../COS/include \
 -I../../CRegExp/include \
 -I../../CStrUtil/include \
@@ -51,10 +48,12 @@ $(LEBUG) \
 -L$(LIB_DIR) \
 -L../../CArgs/lib \
 -L../../CFile/lib \
+-L../../CFileUtil/lib \
 -L../../COS/lib \
 -L../../CRegExp/lib \
 -L../../CStrUtil/lib \
 -lCArgs \
+-lCFileUtil \
 -lCFile \
 -lCOS \
 -lCRegExp \
