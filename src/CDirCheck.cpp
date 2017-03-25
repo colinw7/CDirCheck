@@ -4,6 +4,7 @@
 #include <CFileUtil.h>
 #include <CRegExp.h>
 
+#include <set>
 #include <iostream>
 
 class CDirTreeWalk : public CDirWalk {
@@ -19,7 +20,7 @@ class CDirTreeWalk : public CDirWalk {
   void process();
 
  private:
-  CDirCheck*        check_;
+  CDirCheck*        check_ { 0 };
   std::string       dirName_;
   std::vector<uint> dirCount_;
 };
@@ -28,7 +29,7 @@ class CDirTreeWalk : public CDirWalk {
 
 CDirCheck::
 CDirCheck(const std::string &dirName) :
- dirName_(dirName), matchDir_(0), matchFile_(0), ignoreDir_(0), ignoreFile_(0), remove_(false)
+ dirName_(dirName)
 {
   CFile dir(dirName_);
 
@@ -244,10 +245,12 @@ process()
 
     std::string filename = simplifyPath(file->getFile().getPath());
 
-    if (remove_)
+    if (remove_) {
       std::cout << "rm " << filename << std::endl;
+    }
     else {
-      std::cerr << filename << " :";
+      if (fail != DUPLICATE)
+        std::cerr << filename << " :";
 
       if (fail & ZERO_LENGTH) std::cerr << " ZeroLength";
       if (fail & BIGGER     ) std::cerr << " Bigger";
@@ -256,19 +259,43 @@ process()
       if (fail & BAD_NAME   ) std::cerr << " BadName";
 
       if (fail & DUPLICATE) {
-        std::cerr << " Duplicate (";
+        const CDirCheckFile::FileList &dupFiles = file->getDuplicateFiles();
 
-        const CDirCheckFile::FileList &files = file->getDuplicateFiles();
+        std::set<std::string> names;
 
-        CDirCheckFile::FileList::const_iterator pd1, pd2;
+        if (fail == DUPLICATE) {
+          names.insert(file->getFile().getName());
 
-        for (pd1 = files.begin(), pd2 = files.end(); pd1 != pd2; ++pd1) {
-          if (pd1 != files.begin()) std::cerr << " ";
-
-          std::cerr << simplifyPath((*pd1)->getFile().getPath());
+          for (const auto &dupFile : dupFiles)
+            names.insert(dupFile->getFile().getName());
         }
 
-        std::cerr << ")";
+        if (names.size() == 1) {
+          std::cerr << "Duplicates for " << file->getFile().getName() << " :" << std::endl;
+
+          std::cerr << "   " << simplifyPath(file->getFile().getPath());
+
+          for (const auto &dupFile : dupFiles)
+            std::cerr << " " << simplifyPath(dupFile->getFile().getPath());
+        }
+        else {
+          if (fail == DUPLICATE)
+            std::cerr << "Duplicates for " << filename << " :" << std::endl << "  ";
+          else
+            std::cerr << " Duplicate (";
+
+          int i = 0;
+
+          for (const auto &dupFile : dupFiles) {
+            if (i > 0) std::cerr << " ";
+
+            std::cerr << simplifyPath(dupFile->getFile().getPath());
+
+            ++i;
+          }
+
+          std::cerr << ")";
+        }
       }
 
       if (fail & DUP_NAME) {
@@ -373,7 +400,6 @@ CDirCheckFile::
 CDirCheckFile(const std::string &fileName) :
  CDirFile(fileName)
 {
-  fail_ = 0;
 }
 
 void
@@ -407,6 +433,8 @@ isDuplicate(bool *seen) const
 
   for (p1 = files.begin(), p2 = files.end(); p1 != p2; ++p1) {
     CDirCheckFile *file1 = *p1;
+
+    if (file1->is_link_) continue;
 
     if (file1 < this) continue;
 

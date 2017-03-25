@@ -10,6 +10,8 @@
 class CRegExp;
 class CDirCheckFile;
 
+//------
+
 #define CDirCheckFileMapInst CDirCheckFileMap::getInstance()
 
 class CDirCheckFileMap {
@@ -33,6 +35,8 @@ class CDirCheckFileMap {
   LengthMap   lengthMap_;
   CheckSumMap checkSumMap_;
 };
+
+//------
 
 #define CDirDupNameMapInst CDirDupNameMap::getInstance()
 
@@ -58,6 +62,8 @@ class CDirDupNameMap {
   NameMap nameMap_;
 };
 
+//------
+
 class CDirCheckFile : public CDirFile {
  public:
   CDirCheckFile(const std::string &filename);
@@ -77,10 +83,12 @@ class CDirCheckFile : public CDirFile {
   //----
 
  private:
-  uint     fail_;
+  uint     fail_ { 0 };
   FileList duplicateFiles_;
   FileList dupNameFiles_;
 };
+
+//------
 
 class CDirCheck {
  public:
@@ -165,11 +173,11 @@ class CDirCheck {
   DirList      emptyDirList_;
   FileList     fileList_;
   TestSet      tests;
-  CRegExp     *matchDir_;
-  CRegExp     *matchFile_;
-  CRegExp     *ignoreDir_;
-  CRegExp     *ignoreFile_;
-  bool         remove_;
+  CRegExp     *matchDir_ { 0 };
+  CRegExp     *matchFile_ { 0 };
+  CRegExp     *ignoreDir_ { 0 };
+  CRegExp     *ignoreFile_ { 0 };
+  bool         remove_ { false };
 };
 
 #endif
