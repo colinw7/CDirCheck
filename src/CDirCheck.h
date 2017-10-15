@@ -1,5 +1,5 @@
-#ifndef CDIR_CHECK_H
-#define CDIR_CHECK_H
+#ifndef CDirCheck_H
+#define CDirCheck_H
 
 #include <CFile.h>
 #include <CDirFile.h>
