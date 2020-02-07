@@ -1,5 +1,5 @@
-#ifndef CDIR_FILE_H
-#define CDIR_FILE_H
+#ifndef CDirFile_H
+#define CDirFile_H
 
 #include <CFile.h>
 #include <CFileCheckSum.h>

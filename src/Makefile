@@ -32,6 +32,17 @@ CPP_OBJS = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(CPP_SRC))
 
 C_OBJS = $(patsubst %.c,$(OBJ_DIR)/%.o,$(C_SRC))
 
+CFLAGS = \
+-I$(INC_DIR) \
+-I../../CArgs/include \
+-I../../CFile/include \
+-I../../CFileUtil/include \
+-I../../COS/include \
+-I../../CRegExp/include \
+-I../../CStrUtil/include \
+-I../../CUtil/include \
+-I.
+
 CPPFLAGS = \
 -std=c++14 \
 -I$(INC_DIR) \
@@ -67,7 +78,7 @@ $(CPP_OBJS): $(OBJ_DIR)/%.o: %.cpp
 	$(CPP_CC) -c $< -o $(OBJ_DIR)/$*.o $(CPPFLAGS)
 
 $(C_OBJS): $(OBJ_DIR)/%.o: %.c
-	$(C_CC) -c $< -o $(OBJ_DIR)/$*.o $(CPPFLAGS)
+	$(C_CC) -c $< -o $(OBJ_DIR)/$*.o $(CFLAGS)
 
 $(BIN_DIR)/CDirCheck: $(CPP_OBJS) $(C_OBJS)
 	$(CPP_CC) -o $(BIN_DIR)/CDirCheck $(CPP_OBJS) $(C_OBJS) $(LFLAGS)

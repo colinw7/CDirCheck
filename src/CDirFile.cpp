@@ -18,7 +18,7 @@ CDirFile(const std::string &fileName) :
   }
 
   if (! is_link_) {
-    file_.open(CFileBase::READ);
+    file_.open(CFileBase::Mode::READ);
 
     idev_  = file_.getIDev();
     inode_ = file_.getINode();

@@ -531,16 +531,16 @@ getDupNames(CDirCheckFile *file) const
 {
   CDirFile::FileList files;
 
-  const NameMap::const_iterator p = nameMap_.find(file->getFile().getName());
+  auto p = nameMap_.find(file->getFile().getName());
 
   if (p == nameMap_.end())
     return files;
 
   const FileList &files1 = (*p).second;
 
-  for (FileList::const_iterator p = files1.begin(); p != files1.end(); ++p) {
-    if (*p != file)
-      files.push_back(*p);
+  for (auto &file1 : files1) {
+    if (file1 != file)
+      files.push_back(file1);
   }
 
   return files;
