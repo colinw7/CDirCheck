@@ -147,7 +147,7 @@ void
 CDirCheck::
 addFile(const std::string &path)
 {
-  CDirCheckFile *file = new CDirCheckFile(path);
+  auto *file = new CDirCheckFile(path);
 
   fileList_.push_back(file);
 }
@@ -156,31 +156,21 @@ void
 CDirCheck::
 process()
 {
-  FileList::const_iterator p1, p2;
-
   if (tests.duplicate) {
     CDirCheckFileMap *map = CDirCheckFileMapInst;
 
-    for (p1 = fileList_.begin(), p2 = fileList_.end(); p1 != p2; ++p1) {
-      CDirCheckFile *file = *p1;
-
+    for (const auto &file : fileList_)
       map->addFile(file);
-    }
   }
 
   if (tests.dup_name) {
     CDirDupNameMap *map = CDirDupNameMapInst;
 
-    for (p1 = fileList_.begin(), p2 = fileList_.end(); p1 != p2; ++p1) {
-      CDirCheckFile *file = *p1;
-
+    for (const auto &file : fileList_)
       map->addFile(file);
-    }
   }
 
-  for (p1 = fileList_.begin(), p2 = fileList_.end(); p1 != p2; ++p1) {
-    CDirCheckFile *file = *p1;
-
+  for (const auto &file : fileList_) {
     if (matchFile_ && ! matchFile_->find(file->getFile().getName()))
       continue;
 
@@ -209,9 +199,7 @@ process()
   }
 
   if (tests.dup_name) {
-    for (p1 = fileList_.begin(), p2 = fileList_.end(); p1 != p2; ++p1) {
-      CDirCheckFile *file = *p1;
-
+    for (const auto &file : fileList_) {
       if (matchFile_ && ! matchFile_->find(file->getFile().getName()))
         continue;
 
@@ -228,17 +216,15 @@ process()
   }
 
   if (tests.empty) {
-    for (DirList::const_iterator pd = emptyDirList_.begin(); pd != emptyDirList_.end(); ++pd) {
+    for (const auto &dir : emptyDirList_) {
       if (remove_)
-        std::cout << "rmdir " << *pd << std::endl;
+        std::cout << "rmdir " << dir << std::endl;
       else
-        std::cerr << *pd << " : EmptyDir " << std::endl;
+        std::cerr << dir << " : EmptyDir " << std::endl;
     }
   }
 
-  for (p1 = fileList_.begin(), p2 = fileList_.end(); p1 != p2; ++p1) {
-    CDirCheckFile *file = *p1;
-
+  for (const auto &file : fileList_) {
     uint fail = file->getFail();
 
     if (! fail) continue;
@@ -299,16 +285,18 @@ process()
       }
 
       if (fail & DUP_NAME) {
+        bool first = true;
+
         std::cerr << " Dup Name (";
 
-        const CDirCheckFile::FileList &files = CDirDupNameMapInst->getDupNames(file);
+        const auto &files = CDirDupNameMapInst->getDupNames(file);
 
-        CDirCheckFile::FileList::const_iterator pd1, pd2;
+        for (const auto &dfile : files) {
+          if (! first) std::cerr << " ";
 
-        for (pd1 = files.begin(), pd2 = files.end(); pd1 != pd2; ++pd1) {
-          if (pd1 != files.begin()) std::cerr << " ";
+          std::cerr << simplifyPath(dfile->getFile().getPath());
 
-          std::cerr << simplifyPath((*pd1)->getFile().getPath());
+          first = false;
         }
 
         std::cerr << ")";
@@ -429,11 +417,7 @@ isDuplicate(bool *seen) const
 
   const CDirCheckFileMap::FileList &files = CDirCheckFileMapInst->getCheckSumFiles(getCheckSum());
 
-  CDirCheckFileMap::FileList::const_iterator p1, p2;
-
-  for (p1 = files.begin(), p2 = files.end(); p1 != p2; ++p1) {
-    CDirCheckFile *file1 = *p1;
-
+  for (const auto &file1 : files) {
     if (file1->is_link_) continue;
 
     if (file1 < this) continue;
@@ -496,7 +480,7 @@ getCheckSumFiles(const CFileCheckSum &checksum) const
 {
   static FileList null_files;
 
-  CheckSumMap::const_iterator p = checkSumMap_.find(checksum);
+  auto p = checkSumMap_.find(checksum);
 
   if (p != checkSumMap_.end())
     return (*p).second;
@@ -550,7 +534,7 @@ bool
 CDirDupNameMap::
 isDupName(const CDirCheckFile *file) const
 {
-  const NameMap::const_iterator p = nameMap_.find(file->getFile().getName());
+  const auto p = nameMap_.find(file->getFile().getName());
 
   if (p == nameMap_.end() || (*p).second.size() < 2) return false;
 
