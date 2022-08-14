@@ -311,7 +311,7 @@ std::string
 CDirCheck::
 simplifyPath(const std::string &path) const
 {
-  uint dirSize = dirPath_.size();
+  auto dirSize = dirPath_.size();
 
   std::string path1 = path;
 
@@ -363,7 +363,7 @@ void
 CDirTreeWalk::
 leave()
 {
-  int dirCount = dirCount_.back();
+  auto dirCount = dirCount_.back();
 
   dirCount_.pop_back();
 
