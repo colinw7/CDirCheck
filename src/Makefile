@@ -44,7 +44,7 @@ CFLAGS = \
 -I.
 
 CPPFLAGS = \
--std=c++14 \
+-std=c++17 \
 -I$(INC_DIR) \
 -I../../CArgs/include \
 -I../../CFile/include \
