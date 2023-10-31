@@ -12,12 +12,12 @@ class CDirTreeWalk : public CDirWalk {
   CDirTreeWalk(CDirCheck *check);
 
  private:
-  bool checkDir(const std::string &dirname);
+  bool checkDir(const std::string &dirname) override;
 
-  void enter();
-  void leave();
+  void enter() override;
+  void leave() override;
 
-  void process();
+  void process() override;
 
  private:
   CDirCheck*        check_ { 0 };
